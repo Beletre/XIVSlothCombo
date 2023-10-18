@@ -393,6 +393,27 @@ namespace XIVSlothCombo.Combos.PvE
                     // Use under Fire or Ice
                     if (gauge.ElementTimeRemaining > 0)
                     {
+                        if (LevelChecked(Transpose) && gauge.ElementTimeRemaining <= 2000)
+                        {
+                            if (gauge.InAstralFire)
+                            {
+                                if (HasEffect(Buffs.Firestarter) && LevelChecked(Fire3))
+                                    return Fire3;
+
+                                return Transpose;
+                            }
+                            else // gauge.InUmbralIce
+                            {
+                                if (gauge.IsParadoxActive && LevelChecked(Paradox))
+                                    return Paradox;
+
+                                if (LevelChecked(UmbralSoul))
+                                    return UmbralSoul;
+                                else
+                                    return Transpose;
+                            }
+                        }
+
                         // Umbral Soul/Transpose when there's no target
                         if (IsEnabled(CustomComboPreset.BLM_Adv_UmbralSoul) && CurrentTarget is null)
                         {
