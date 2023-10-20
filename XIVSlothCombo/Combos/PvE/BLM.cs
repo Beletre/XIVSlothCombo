@@ -393,24 +393,45 @@ namespace XIVSlothCombo.Combos.PvE
                     // Use under Fire or Ice
                     if (gauge.ElementTimeRemaining > 0)
                     {
-                        if (LevelChecked(Transpose) && gauge.ElementTimeRemaining <= 2000)
+                        // AF/UI upkeep with highest prio
+                        if (gauge.ElementTimeRemaining <= 2000)
                         {
                             if (gauge.InAstralFire)
                             {
-                                if (HasEffect(Buffs.Firestarter) && LevelChecked(Fire3))
+                                if (HasEffect(All.Buffs.Swiftcast) || HasEffect(Buffs.Triplecast))
+                                {
+                                    if (LevelChecked(Paradox) && gauge.IsParadoxActive && currentMP >= 3000)
+                                        return Paradox;
+                                    else if (currentMP >= 3000)
+                                        return OriginalHook(Fire);
+                                    else if (LevelChecked(Despair) && currentMP >= MP.AllMPSpells)
+                                        return Despair;
+                                    else if (LevelChecked(Transpose))
+                                        return Transpose;
+                                }
+                                else if (LevelChecked(Fire3) && HasEffect(Buffs.Firestarter))
+                                {
                                     return Fire3;
-
-                                return Transpose;
-                            }
-                            else // gauge.InUmbralIce
-                            {
-                                if (gauge.IsParadoxActive && LevelChecked(Paradox))
-                                    return Paradox;
-
-                                if (LevelChecked(UmbralSoul))
-                                    return UmbralSoul;
-                                else
+                                }
+                                else if (LevelChecked(Transpose))
+                                {
                                     return Transpose;
+                                }
+                            }
+                            else if (gauge.InUmbralIce)
+                            {
+                                if (LevelChecked(Paradox) && gauge.IsParadoxActive)
+                                {
+                                    return Paradox;
+                                }
+                                else if (LevelChecked(UmbralSoul))
+                                {
+                                    return UmbralSoul;
+                                }
+                                else if (LevelChecked(Transpose))
+                                { 
+                                    return Transpose;
+                                }
                             }
                         }
 
@@ -486,7 +507,7 @@ namespace XIVSlothCombo.Combos.PvE
                         // Sharpcast
                         if (Config.BLM_Adv_Cooldowns_Choice[1] &&
                             ActionReady(Sharpcast) && !HasEffect(Buffs.Sharpcast) &&
-                            !WasLastAction(Thunder3) && CanSpellWeave(actionID))
+                            !WasLastAction(Thunder3) && CanSpellWeave(actionID) && gauge.InUmbralIce)
                             return Sharpcast;
 
                         // Use Triplecast only with Astral Fire/Umbral Hearts, and we have enough MP to cast Fire IV twice
@@ -514,8 +535,12 @@ namespace XIVSlothCombo.Combos.PvE
                             (currentMP >= MP.ThunderST || (HasEffect(Buffs.Sharpcast) && HasEffect(Buffs.Thundercloud))))
                         {
                             if (LevelChecked(Thunder) &&
-                                (dotDebuff is null || dotDebuff.RemainingTime <= thunderRefreshTime) && GetTargetHPPercent() > ThunderHP)
+                                (dotDebuff is null || dotDebuff.RemainingTime <= thunderRefreshTime) && 
+                                GetTargetHPPercent() > ThunderHP && 
+                                gauge.ElementTimeRemaining >= 6000) // Never let AF/UI gauge drop to 0
+                            {
                                 return OriginalHook(Thunder);
+                            }
                         }
                     }
 
