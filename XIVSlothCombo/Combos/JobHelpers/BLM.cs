@@ -102,7 +102,7 @@ namespace XIVSlothCombo.Combos.JobHelpers
                 if (CustomComboFunctions.HasEffect(Buffs.Sharpcast) && PrePullStep == 1) PrePullStep++;
                 else if (PrePullStep == 1) actionID = Sharpcast;
 
-                if (CustomComboFunctions.WasLastAction(Fire3) && PrePullStep == 2) CurrentState = OpenerState.InOpener;
+                if (CustomComboFunctions.LocalPlayer.CastActionId == Fire3 && PrePullStep == 2) CurrentState = OpenerState.InOpener;
                 else if (PrePullStep == 2) actionID = Fire3;
 
                 if (PrePullStep == 2 && !CustomComboFunctions.HasEffect(Buffs.Sharpcast))
@@ -129,7 +129,7 @@ namespace XIVSlothCombo.Combos.JobHelpers
             {
                 if (Config.BLM_Advanced_OpenerSelection == 0)
                 {
-                    if (CustomComboFunctions.WasLastAction(Thunder3) && OpenerStep == 1) OpenerStep++;
+                    if (CustomComboFunctions.LocalPlayer.CastActionId == Thunder3 && OpenerStep == 1) OpenerStep++;
                     else if (OpenerStep == 1) actionID = Thunder3;
 
                     if (CustomComboFunctions.WasLastAction(Triplecast) && OpenerStep == 2) OpenerStep++;
@@ -183,7 +183,7 @@ namespace XIVSlothCombo.Combos.JobHelpers
                     if (CustomComboFunctions.WasLastAction(Paradox) && OpenerStep == 18) OpenerStep++;
                     else if (OpenerStep == 18) actionID = Paradox;
 
-                    if (CustomComboFunctions.WasLastAction(Blizzard4) && OpenerStep == 19) OpenerStep++;
+                    if (CustomComboFunctions.LocalPlayer.CastActionId == Blizzard4 && OpenerStep == 19) OpenerStep++;
                     else if (OpenerStep == 19) actionID = Blizzard4;
 
                     if (CustomComboFunctions.WasLastAction(Thunder3) && OpenerStep == 20) CurrentState = OpenerState.OpenerFinished;
