@@ -694,6 +694,11 @@ namespace XIVSlothCombo.Combos.PvE
                         if (LevelChecked(Paradox) && gauge.IsParadoxActive && gauge.UmbralHearts is 3 && currentMP == MP.MaxMP)
                             return Paradox;
 
+                        if (gauge.UmbralIceStacks < 2)
+                            return Blizzard3;
+                        else if (gauge.UmbralIceStacks < 3)
+                            return Blizzard;
+
                         // Fire III when at max Umbral Hearts
                         return (gauge.UmbralHearts is 3 && currentMP == MP.MaxMP)
                             ? Fire3
