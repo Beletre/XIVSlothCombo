@@ -364,6 +364,299 @@ namespace XIVSlothCombo.Combos.PvE
             protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.BLM_ST_AdvancedMode;
             internal static BLMOpenerLogic BLMOpener = new();
 
+            enum OpenerState
+            {
+                None,
+                FirstSharpcast,
+                Fire3,
+                FirstThunder3,
+                FirstTriplecast,
+                FirstFire4,
+                SecondFire4,
+                Amplifier,
+                LeyLines,
+                ThirdFire4,
+                Swiftcast,
+                FourthFire4,
+                SecondTriplecast,
+                FirstDespair,
+                Manafont,
+                FifthFire4,
+                SecondSharpcast,
+                SecondDespair,
+                Blizzard3,
+                Xenoglossy,
+                Paradox,
+                Blizzard4,
+                SecondThunder3
+            }
+
+            OpenerState openerState = OpenerState.None;
+
+            public bool resetOpener()
+            {
+                openerState = OpenerState.None;
+                return false;
+            }
+
+            public bool advanceOpener(ref uint actionID, ref BLMGauge gauge)
+            {
+                if (!(CustomComboFunctions.LocalPlayer.Level >= 90))
+                    return false;
+
+                float tripleCastStacks = GetBuffStacks(Buffs.Triplecast);
+
+                if (openerState == OpenerState.None)
+                {
+                    bool canAdvance = true;
+                    canAdvance &= CustomComboFunctions.GetRemainingCharges(Sharpcast) == 2;
+                    canAdvance &= CustomComboFunctions.GetRemainingCharges(Triplecast) == 2;
+                    canAdvance &= CustomComboFunctions.IsOffCooldown(Manafont);
+                    canAdvance &= CustomComboFunctions.IsOffCooldown(All.Swiftcast);
+                    canAdvance &= CustomComboFunctions.LocalPlayer.CurrentMp == 10000;
+                    canAdvance &= !CustomComboFunctions.InCombat();
+                    if (canAdvance)
+                    {
+                        openerState = OpenerState.FirstSharpcast;
+                    }
+                }
+                if (openerState == OpenerState.FirstSharpcast)
+                {
+                    bool hasCorrectState = true;
+                    hasCorrectState &= CustomComboFunctions.HasCharges(Sharpcast) || CustomComboFunctions.HasEffect(Buffs.Sharpcast);
+                    if (!hasCorrectState)
+                    {
+                        return resetOpener();
+                    }
+
+                    bool canAdvance = true;
+                    canAdvance &= CustomComboFunctions.HasEffect(Buffs.Sharpcast);
+                    if (canAdvance)
+                    {
+                        openerState = OpenerState.Fire3;
+                    }
+                    else
+                    {
+                        actionID = Sharpcast;
+                        return true;
+                    }
+                }
+                if (openerState == OpenerState.Fire3)
+                {
+                    bool hasCorrectState = true;
+
+                    hasCorrectState &= CustomComboFunctions.HasEffect(Buffs.Sharpcast);
+                    if (!hasCorrectState)
+                    {
+                        return resetOpener();
+                    }
+
+                    bool canAdvance = true;
+                    canAdvance &= CustomComboFunctions.WasLastAction(Fire3);
+                    if (canAdvance)
+                    {
+                        openerState = OpenerState.FirstThunder3;
+                    }
+                    else
+                    {
+                        actionID = Fire3;
+                        return true;
+                    }
+                }
+                if (openerState == OpenerState.FirstThunder3)
+                {
+                    bool hasCorrectState = true;
+                    hasCorrectState &= gauge.InAstralFire;
+                    hasCorrectState &= (CustomComboFunctions.LocalPlayer.CurrentMp >= 400) || CustomComboFunctions.WasLastAction(Thunder3);
+
+                    if (!hasCorrectState)
+                    {
+                        return resetOpener();
+                    }
+
+                    bool canAdvance = true;
+                    canAdvance &= CustomComboFunctions.WasLastAction(Thunder3);
+                    if (canAdvance)
+                    {
+                        openerState = OpenerState.FirstTriplecast;
+                    }
+                    else
+                    {
+                        actionID = Thunder3;
+                        return true;
+                    }
+                }
+                if (openerState == OpenerState.FirstTriplecast)
+                {
+                    bool hasCorrectState = true;
+                    hasCorrectState &= gauge.InAstralFire;
+                    hasCorrectState &= CustomComboFunctions.HasCharges(Triplecast) || CustomComboFunctions.WasLastAction(Triplecast);
+
+                    if (!hasCorrectState)
+                    {
+                        return resetOpener();
+                    }
+
+                    bool canAdvance = true;
+                    canAdvance &= CustomComboFunctions.WasLastAction(Triplecast);
+                    if (canAdvance)
+                    {
+                        openerState = OpenerState.FirstFire4;
+                    }
+                    else
+                    {
+                        actionID = Triplecast;
+                        return true;
+                    }
+                }
+                if (openerState == OpenerState.FirstFire4)
+                {
+                    bool hasCorrectState = true;
+                    hasCorrectState &= gauge.InAstralFire;
+                    hasCorrectState &= (tripleCastStacks == 2) || (tripleCastStacks == 3);
+                    hasCorrectState &= (CustomComboFunctions.LocalPlayer.CurrentMp >= 1600) || CustomComboFunctions.WasLastAction(Fire4);
+
+                    if (!hasCorrectState)
+                    {
+                        return resetOpener();
+                    }
+
+                    bool canAdvance = true;
+                    canAdvance &= CustomComboFunctions.WasLastAction(Fire4);
+                    canAdvance &= tripleCastStacks == 2;
+                    if (canAdvance)
+                    {
+                        openerState = OpenerState.SecondFire4;
+                    }
+                    else
+                    {
+                        actionID = Fire4;
+                        return true;
+                    }
+                }
+                if (openerState == OpenerState.SecondFire4)
+                {
+                    bool canAdvance = true;
+                    canAdvance &= CustomComboFunctions.WasLastAction(Fire4);
+                    canAdvance &= tripleCastStacks == 1;
+
+                    bool hasCorrectState = true;
+                    hasCorrectState &= gauge.InAstralFire;
+                    hasCorrectState &= (tripleCastStacks == 1) || (tripleCastStacks == 2);
+                    hasCorrectState &= CustomComboFunctions.LocalPlayer.CurrentMp >= 1600 || canAdvance;
+
+                    if (!hasCorrectState)
+                    {
+                        return resetOpener();
+                    }
+
+                    if (canAdvance)
+                    {
+                        openerState = OpenerState.Amplifier;
+                    }
+                    else
+                    {
+                        actionID = Fire4;
+                        return true;
+                    }
+                }
+                if (openerState == OpenerState.Amplifier)
+                {
+                    bool hasCorrectState = true;
+                    hasCorrectState &= CustomComboFunctions.ActionReady(Amplifier);
+
+                    if (!hasCorrectState)
+                    {
+                        return resetOpener();
+                    }
+
+                    bool canAdvance = true;
+                    canAdvance &= CustomComboFunctions.WasLastAction(Amplifier);
+
+                    if (canAdvance)
+                    {
+                        openerState = OpenerState.LeyLines;
+                    }
+                    else
+                    {
+                        actionID = Amplifier;
+                        return true;
+                    }
+                }
+                if (openerState == OpenerState.LeyLines)
+                {
+                    bool hasCorrectState = true;
+                    hasCorrectState &= ActionReady(LeyLines) || CustomComboFunctions.WasLastAction(LeyLines);
+
+                    if (!hasCorrectState)
+                    {
+                        return resetOpener();
+                    }
+
+                    bool canAdvance = true;
+                    canAdvance &= CustomComboFunctions.WasLastAction(LeyLines);
+
+                    if (canAdvance)
+                    {
+                        openerState = OpenerState.ThirdFire4;
+                    }
+                    else
+                    {
+                        actionID = LeyLines;
+                        return true;
+                    }
+                }
+                if (openerState == OpenerState.ThirdFire4)
+                {
+                    bool hasCorrectState = true;
+                    hasCorrectState &= gauge.InAstralFire;
+
+                    if(CustomComboFunctions.WasLastAction(Fire4))
+                    {
+                        hasCorrectState &= tripleCastStacks == 0;
+                    }
+                    else
+                    {
+                        hasCorrectState &= tripleCastStacks == 1;
+                    }
+
+                    hasCorrectState &= CustomComboFunctions.LocalPlayer.CurrentMp >= 1600 || CustomComboFunctions.WasLastAction(Fire4);
+
+                    if (!hasCorrectState)
+                    {
+                        return resetOpener();
+                    }
+
+                    bool canAdvance = true;
+                    canAdvance &= CustomComboFunctions.WasLastAction(Fire4);
+
+                    if (canAdvance)
+                    {
+                        openerState = OpenerState.Swiftcast;
+                    }
+                    else
+                    {
+                        actionID = Fire4;
+                        return true;
+                    }
+                }
+                if (openerState == OpenerState.Swiftcast)
+                {
+                    bool hasCorrectState = true;
+                    hasCorrectState &= ActionReady(All.Swiftcast) || HasEffect(All.Buffs.Swiftcast);
+
+                    if (!hasCorrectState)
+                    {
+                        return resetOpener();
+                    }
+
+                    actionID = All.Swiftcast;
+                    return true;
+                }
+
+                return false;
+            }
+
             protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
             {
                 uint currentMP = LocalPlayer.CurrentMp;
@@ -379,7 +672,7 @@ namespace XIVSlothCombo.Combos.PvE
                     // Opener for BLM
                     if (IsEnabled(CustomComboPreset.BLM_Adv_Opener))
                     {
-                        if (BLMOpener.DoFullOpener(ref actionID, false))
+                        if (advanceOpener(ref actionID, ref gauge))
                             return actionID;
                     }
 
