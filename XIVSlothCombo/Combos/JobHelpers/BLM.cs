@@ -414,6 +414,15 @@ namespace XIVSlothCombo.Combos.JobHelpers
         {
             if (!LevelChecked) return false;
 
+            // Reset opener with a transpose soul if it got stuck
+            if(CurrentState == OpenerState.InOpener)
+            {
+                if(CustomComboFunctions.WasLastAction(Transpose))
+                {
+                    CurrentState = OpenerState.FailedOpener;
+                }
+            }
+
             if (CurrentState == OpenerState.PrePull)
                 if (DoPrePullSteps(ref actionID)) return true;
 
