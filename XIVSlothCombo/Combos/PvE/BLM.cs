@@ -1,5 +1,6 @@
 using Dalamud.Game.ClientState.JobGauge.Types;
 using Dalamud.Game.ClientState.Statuses;
+using System;
 using System.Collections.Generic;
 using XIVSlothCombo.Combos.JobHelpers;
 using XIVSlothCombo.Combos.PvE.Content;
@@ -9,6 +10,50 @@ using XIVSlothCombo.Extensions;
 
 namespace XIVSlothCombo.Combos.PvE
 {
+    public class PlayerMovementTracker
+    {
+        private DateTime? _startTime;
+        private bool _isMoving = false;
+        private bool _hasTripleCast = false;
+        private bool _hasSwiftcast = false;
+
+        public void UpdateMovementStatus(bool isMoving, bool hasTripleCast, bool hasSwiftcast)
+        {
+            if (_startTime == null && isMoving)
+            {
+                _startTime = DateTime.Now;
+            }
+            else if (_startTime != null && !isMoving)
+            {
+                _startTime = null;
+            }
+
+            _isMoving = isMoving;
+            _hasTripleCast = hasTripleCast;
+            _hasSwiftcast = hasSwiftcast;
+        }
+
+        private TimeSpan GetTimeSinceMovementStarted()
+        {
+            if (_startTime == null)
+            {
+                return TimeSpan.Zero;
+            }
+            else
+            {
+                return DateTime.Now - _startTime.Value;
+            }
+        }
+
+        public bool NeedsMovementMitigation()
+        {
+            if (_hasTripleCast || _hasSwiftcast)
+                return false;
+
+            return GetTimeSinceMovementStarted().TotalSeconds >= .5;
+        }
+    }
+
     internal class BLM
     {
         public const byte ClassID = 7;
@@ -134,6 +179,7 @@ namespace XIVSlothCombo.Combos.PvE
         {
             protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.BLM_ST_SimpleMode;
             internal static BLMOpenerLogic BLMOpener = new();
+            internal static PlayerMovementTracker playerMovementTracker = new();
 
             protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
             {
@@ -141,6 +187,7 @@ namespace XIVSlothCombo.Combos.PvE
                 float astralFireRefresh = 8000;
                 Status? dotDebuff = FindTargetEffect(ThunderList[OriginalHook(Thunder)]); // Match DoT with its debuff ID, and check for the debuff
                 BLMGauge? gauge = GetJobGauge<BLMGauge>();
+                playerMovementTracker.UpdateMovementStatus(IsMoving, HasEffect(Buffs.Triplecast), HasEffect(All.Buffs.Swiftcast));
 
                 if (actionID is Fire)
                 {
@@ -172,7 +219,7 @@ namespace XIVSlothCombo.Combos.PvE
                             return Variant.VariantRampart;
 
                         // Handle movement
-                        if (IsMoving && InCombat())
+                        if (playerMovementTracker.NeedsMovementMitigation() && InCombat())
                         {
                             if (!HasEffect(Buffs.Sharpcast) && ActionReady(Sharpcast))
                                 return Sharpcast;
@@ -363,6 +410,7 @@ namespace XIVSlothCombo.Combos.PvE
         {
             protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.BLM_ST_AdvancedMode;
             internal static BLMOpenerLogic BLMOpener = new();
+            internal static PlayerMovementTracker playerMovementTracker = new();
 
             protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
             {
@@ -373,6 +421,7 @@ namespace XIVSlothCombo.Combos.PvE
                 BLMGauge? gauge = GetJobGauge<BLMGauge>();
                 int thunderRefreshTime = Config.BLM_Adv_Thunder;
                 int ThunderHP = Config.BLM_ST_Adv_ThunderHP;
+                playerMovementTracker.UpdateMovementStatus(IsMoving, HasEffect(Buffs.Triplecast), HasEffect(All.Buffs.Swiftcast));
 
                 if (actionID is Fire)
                 {
@@ -456,7 +505,7 @@ namespace XIVSlothCombo.Combos.PvE
                             return Variant.VariantRampart;
 
                         // Handle movement
-                        if (IsEnabled(CustomComboPreset.BLM_Adv_Movement) && IsMoving && InCombat())
+                        if (IsEnabled(CustomComboPreset.BLM_Adv_Movement) && playerMovementTracker.NeedsMovementMitigation() && InCombat())
                         {
                             if (Config.BLM_Adv_Movement_Choice[0] &&
                                 !HasEffect(Buffs.Sharpcast) && ActionReady(Sharpcast))
