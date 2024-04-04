@@ -423,7 +423,7 @@ namespace XIVSlothCombo.Combos.PvE
                 int ThunderHP = Config.BLM_ST_Adv_ThunderHP;
                 playerMovementTracker.UpdateMovementStatus(IsMoving, HasEffect(Buffs.Triplecast), HasEffect(All.Buffs.Swiftcast));
 
-                if (actionID is Fire)
+                if (actionID is Fire4)
                 {
                     // Opener for BLM
                     if (IsEnabled(CustomComboPreset.BLM_Adv_Opener))
@@ -893,7 +893,7 @@ namespace XIVSlothCombo.Combos.PvE
                 BLMGauge? gauge = GetJobGauge<BLMGauge>();
                 int ThunderHP = Config.BLM_AoE_Adv_ThunderHP;
 
-                if (actionID is Blizzard2 or HighBlizzard2)
+                if (actionID is Freeze)
                 {
                     // 2xHF2 Transpose with Freeze [A7]
                     if (gauge.ElementTimeRemaining <= 0)
